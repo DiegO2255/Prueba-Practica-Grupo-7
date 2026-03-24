@@ -17,6 +17,7 @@ void mostrarEstadoCombate(Juego& juego);
 void mostrarMapa(Juego& juego);
 void mostrarEnemigosActivos(Juego& juego);
 void procesarAvanzarTurno(Juego& juego);
+void iniciarSiguienteOleada(Juego& juego);
 void mostrarIntro();
 void mostrarGameOver(Juego& juego);
 void limpiarBuffer();
@@ -251,10 +252,14 @@ void mostrarMenuPrincipal() {
     cout << "|  3. Mostrar oleadas registradas                    |" << endl;
     cout << "|  4. Mostrar estado del combate                     |" << endl;
     cout << "|  5. Iniciar combate                                |" << endl;
-    cout << "|  6. Salir                                          |" << endl;
+    cout << "|  6. Iniciar siguiente oleada                       |" << endl;
+    cout << "|  7. Avanzar turno                                  |" << endl;
+    cout << "|  8. Salir                                          |" << endl;
     cout << "+====================================================+" << endl;
     cout << "Seleccione una opcion: ";
 }
+
+// ============ MENU TORRES ============
 
 void menuTorres(Juego& juego) {
     char subOpcion;
@@ -403,6 +408,8 @@ void menuTorres(Juego& juego) {
     } while (true);
 }
 
+// ============ MENU OLEADAS ============
+
 void menuOleadas(Juego& juego) {
     char subOpcion;
     do {
@@ -516,6 +523,8 @@ void menuOleadas(Juego& juego) {
     } while (true);
 }
 
+// ============ FUNCIONES DE COMBATE ============
+
 void procesarAvanzarTurno(Juego& juego) {
     if (!juego.enCombate()) {
         cout << "\n[!] No hay combate activo. Inicie el combate primero (opcion 5)." << endl;
@@ -525,7 +534,7 @@ void procesarAvanzarTurno(Juego& juego) {
     if (juego.obtenerEnemigosCount() == 0) {
         cout << "\n[!] No hay enemigos en el campo de batalla." << endl;
         if (juego.obtenerOleadaActual() > 0 && juego.obtenerOleadas()->obtenerActual() != nullptr) {
-            cout << "  Use la opcion de iniciar oleada para continuar." << endl;
+            cout << "  Use la opcion 6 para iniciar la siguiente oleada." << endl;
         }
         return;
     }
@@ -559,10 +568,49 @@ void procesarAvanzarTurno(Juego& juego) {
     mostrarMapa(juego);
 }
 
+void iniciarSiguienteOleada(Juego& juego) {
+    if (!juego.enCombate()) {
+        cout << "\n[!] No hay combate activo. Inicie el combate primero (opcion 5)." << endl;
+        return;
+    }
+    
+    if (juego.obtenerEnemigosCount() > 0) {
+        cout << "\n[!] Aun hay enemigos en el campo de batalla." << endl;
+        cout << "  Debes eliminar a todos los enemigos antes de iniciar la siguiente oleada." << endl;
+        return;
+    }
+    
+    NodoOleada* oleadaActual = juego.obtenerOleadas()->obtenerActual();
+    if (oleadaActual == nullptr) {
+        cout << "\n[!] No hay mas oleadas disponibles. Has completado todas las oleadas." << endl;
+        return;
+    }
+    
+    cout << "\n+====================================================+" << endl;
+    cout << "|                 OLEADA " << setw(3) << oleadaActual->idOleada << "                            |" << endl;
+    cout << "+----------------------------------------------------+" << endl;
+    cout << "|  Enemigos: " << setw(46) << oleadaActual->cantidadEnemigos << " |" << endl;
+    cout << "|  Tipo: " << setw(50) << oleadaActual->tipoEnemigo << " |" << endl;
+    cout << "|  Vida: " << setw(50) << oleadaActual->vidaBase << " |" << endl;
+    cout << "|  Velocidad: " << setw(45) << oleadaActual->velocidadBase << " |" << endl;
+    cout << "|  Recompensa: $" << setw(43) << oleadaActual->recompensaBase << " |" << endl;
+    cout << "+====================================================+" << endl;
+    
+    if (juego.iniciarSiguienteOleada()) {
+        cout << "\n[OK] " << oleadaActual->cantidadEnemigos << " enemigos entran al campo de batalla!" << endl;
+        cout << "  Todos comienzan en posicion 0." << endl;
+        mostrarMapa(juego);
+    } else {
+        cout << "\n[ERROR] No se pudo iniciar la siguiente oleada." << endl;
+    }
+}
+
 void limpiarBuffer() {
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
+
+// ============ MAIN ============
 
 int main() {
     Juego juego;
@@ -629,24 +677,7 @@ int main() {
                     cin >> iniciar;
                     
                     if (iniciar == 's' || iniciar == 'S') {
-                        NodoOleada* oleadaActual = juego.obtenerOleadas()->obtenerActual();
-                        if (oleadaActual != nullptr) {
-                            cout << "\n+====================================================+" << endl;
-                            cout << "|                 OLEADA " << setw(3) << oleadaActual->idOleada << "                            |" << endl;
-                            cout << "+----------------------------------------------------+" << endl;
-                            cout << "|  Enemigos: " << setw(46) << oleadaActual->cantidadEnemigos << " |" << endl;
-                            cout << "|  Tipo: " << setw(50) << oleadaActual->tipoEnemigo << " |" << endl;
-                            cout << "|  Vida: " << setw(50) << oleadaActual->vidaBase << " |" << endl;
-                            cout << "|  Velocidad: " << setw(45) << oleadaActual->velocidadBase << " |" << endl;
-                            cout << "|  Recompensa: $" << setw(43) << oleadaActual->recompensaBase << " |" << endl;
-                            cout << "+====================================================+" << endl;
-                            
-                            if (juego.iniciarSiguienteOleada()) {
-                                cout << "\n[OK] " << oleadaActual->cantidadEnemigos << " enemigos entran al campo de batalla!" << endl;
-                                cout << "  Todos comienzan en posicion 0." << endl;
-                                mostrarMapa(juego);
-                            }
-                        }
+                        iniciarSiguienteOleada(juego);
                     }
                 } else {
                     cout << "[ERROR] Error al iniciar el combate." << endl;
@@ -655,6 +686,16 @@ int main() {
             }
             
             case 6:
+                cout << "\n=== INICIAR SIGUIENTE OLEADA ===" << endl;
+                iniciarSiguienteOleada(juego);
+                break;
+            
+            case 7:
+                cout << "\n=== AVANZAR TURNO ===" << endl;
+                procesarAvanzarTurno(juego);
+                break;
+            
+            case 8:
                 cout << "\n+====================================================+" << endl;
                 cout << "|     Gracias por jugar Tower Defense!               |" << endl;
                 cout << "+====================================================+" << endl;
@@ -665,7 +706,7 @@ int main() {
                 limpiarBuffer();
         }
         
-    } while (opcion != 6);
+    } while (opcion != 8);
     
     return 0;
 }
