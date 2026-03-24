@@ -8,7 +8,7 @@
 
 using namespace std;
 
-// Funciones
+// Prototipos de funciones
 void mostrarMenuPrincipal();
 void menuTorres(Juego& juego);
 void menuOleadas(Juego& juego);
